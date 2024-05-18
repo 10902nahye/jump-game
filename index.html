@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mario Game</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        #world {
+            width: 100%;
+            height: 100%;
+            background-color: #badee4; /* 하늘색 배경 */
+            position: relative;
+        }
+
+        #mario {
+            width: 50px;
+            height: 50px;
+            background-color: #d49ada; /* 빨간색 네모난 캐릭터 */
+            position: absolute;
+            bottom: 0;
+            left: 50px; /* 초기 위치 */
+        }
+
+        .obstacle {
+            width: 30px; /* 장애물 너비 조정 */
+            height: 30px; /* 장애물 높이 조정 */
+            background-color: rgb(70, 25, 143); /* 장애물 색상 */
+            position: absolute;
+            bottom: 0;
+            animation: moveObstacle 4s linear infinite; /* 장애물 이동 애니메이션 */
+        }
+
+        @keyframes moveObstacle {
+            to {
+                left: -30px; /* 왼쪽으로 이동 */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="world">
+        <div id="mario"></div>
+    </div>
+
+    <script>
+        const mario = document.getElementById('mario');
+        let isJumping = false;
+
+        // 방향키 입력 이벤트 처리
+        window.addEventListener('keydown', (event) => {
+            const key = event.key;
+            switch (key) {
+                case 'ArrowUp':
+                    if (!isJumping) {
+                        jump();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    moveLeft();
+                    break;
+                case 'ArrowRight':
+                    moveRight();
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        // 스페이스 바 입력 이벤트 처리
+        window.addEventListener('keydown', (event) => {
+            const key = event.key;
+            switch (key) {
+                case ' ':
+                    if (!isJumping) {
+                        jump();
+                    }
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        // 점프
+        function jump() {
+            isJumping = true;
+            let jumpHeight = 0;
+            const jumpInterval = setInterval(() => {
+                jumpHeight += 5;
+                mario.style.bottom = jumpHeight + 'px';
+                if (jumpHeight >= 100) { // 점프 높이 조정
+                    clearInterval(jumpInterval);
+                    setTimeout(() => {
+                        fall();
+                    }, 300); // 점프 후 일정 시간 후에 하강 시작
+                }
+            }, 20); // 점프 속도
+        }
+
+        // 하강
+        function fall() {
+            let fallHeight = 100; // 점프 높이에 따른 하강 시작 높이 조정
+            const fallInterval = setInterval(() => {
+                fallHeight -= 5;
+                mario.style.bottom = fallHeight + 'px';
+                if (fallHeight <= 0) {
+                    clearInterval(fallInterval);
+                    isJumping = false;
+                }
+            }, 20); // 하강 속도
+        }
+
+        // 왼쪽으로 이동
+        function moveLeft() {
+            const currentLeft = parseInt(mario.style.left) || 0;
+            if (currentLeft > 0) {
+                mario.style.left = (currentLeft - 10) + 'px';
+            }
+        }
+
+        // 오른쪽으로 이동
+        function moveRight() {
+            const currentLeft = parseInt(mario.style.left) || 0;
+            const worldWidth = document.getElementById('world').offsetWidth;
+            if (currentLeft < worldWidth - 50) {
+                mario.style.left = (currentLeft + 10) + 'px';
+            }
+        }
+
+        // 장애물 생성
+        function createObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = '100%'; // 초기 위치
+            const randomHeight = Math.floor(Math.random() * 200) + 50; // 높이 랜덤 설정
+            obstacle.style.height = '30px'; // 장애물 높이 조정
+            document.getElementById('world').appendChild(obstacle);
+
+            // 충돌 감지
+            const obstacleInterval = setInterval(() => {
+                const marioRect = mario.getBoundingClientRect();
+                const obstacleRect = obstacle.getBoundingClientRect();
+                if (
+                    marioRect.bottom > obstacleRect.top &&
+                    marioRect.top < obstacleRect.bottom &&
+                    marioRect.right > obstacleRect.left &&
+                    marioRect.left < obstacleRect.right
+                ) {
+                    clearInterval(obstacleInterval);
+                    alert('Game Over!');
+                }
+            }, 20); // 충돌 감지 주기
+
+            // 장애물이 화면을 벗어나면 삭제
+            obstacle.addEventListener('animationiteration', () => {
+                obstacle.remove();
+            });
+        }
+
+        // 일정 시간마다 장애물 생성
+        setInterval(createObstacle, 3000);
+    </script>
+</body>
+</html>
